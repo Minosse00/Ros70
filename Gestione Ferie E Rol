@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Ferie e Ticket</title>
+    <style>
+        :root, [data-theme="dark"] {
+            --primary: #94a3b8;
+            --secondary: #3b82f6;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text: #cbd5e1;
+            --text-heading: #f8fafc;
+            --summary-bg: #334155;
+            --highlight-bg: #1e3a8a;
+            --highlight-text: #bfdbfe;
+            --input-bg: #0f172a;
+        }
+
+        [data-theme="light"] {
+            --primary: #1e293b;
+            --secondary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --text: #334155;
+            --text-heading: #1e293b;
+            --summary-bg: #f1f5f9;
+            --highlight-bg: #eff6ff;
+            --highlight-text: #1e40af;
+            --input-bg: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 { font-size: 1.4rem; color: var(--text-heading); margin: 0; }
+
+        .theme-btn {
+            background-color: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            width: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .grid-forms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: var(--text-heading);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        label { font-size: 0.85rem; font-weight: 600; }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            background-color: var(--input-bg);
+            color: var(--text);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.95rem;
+        }
+
+        .btn-confirm { background-color: var(--success); font-size: 1rem; margin-top: 10px; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .summary-item {
+            background: var(--summary-bg);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .summary-item span {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-heading);
+            margin-top: 4px;
+        }
+
+        details {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        summary {
+            font-weight: bold;
+            font-size: 1.05rem;
+            color: var(--text-heading);
+            cursor: pointer;
+            outline: none;
+            padding: 4px 0;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+            font-size: 0.85rem;
+        }
+
+        th, td { padding: 8px 6px; border: 1px solid var(--border); text-align: center; }
+        th { background-color: #334155; color: #ffffff; }
+
+        input.table-input {
+            width: 60px;
+            text-align: center;
+            padding: 6px 2px;
+            border: 1px solid var(--border);
+            background-color: var(--input-bg);
+            color: var(--text);
+            border-radius: 4px;
+        }
+
+        .highlight { font-weight: bold; background-color: var(--highlight-bg); color: var(--highlight-text); }
+        .btn-del { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-container">
+        <h1>Gestione Ferie, Permessi e Ticket</h1>
+        <button class="theme-btn" onclick="toggleTema()">
+            <span id="themeIcon">☀️</span> <span id="themeText">Tema Chiaro</span>
+        </button>
+    </div>
+
+    <div class="grid-forms">
+        <div class="card">
+            <h3>+ Aggiungi Mese</h3>
+            <div class="form-row">
+                <label for="inputMese">Mese *:</label>
+                <input type="month" id="inputMese" required>
+            </div>
+            <div class="form-row">
+                <label for="inputTicketVuoto">Ticket (opzionale):</label>
+                <input type="number" id="inputTicketVuoto" placeholder="Inserisci quantità se presente">
+            </div>
+            <button onclick="aggiungiMese()">Accredita Mese (+14.66h / +3.33h / +2.67h)</button>
+        </div>
+
+        <div class="card">
+            <h3>🎫 Gestione Quick Ticket</h3>
+            <div class="form-row">
+                <label for="selectMeseTicket">Seleziona Mese:</label>
+                <select id="selectMeseTicket"></select>
+            </div>
+            <div class="form-row">
+                <label for="inputTicketSpesi">Ticket Spesi nel mese:</label>
+                <input type="number" id="inputTicketSpesi" placeholder="es. 5">
+            </div>
+            <button style="background-color: #0284c7;" onclick="aggiornaTicketMese()">Aggiorna Ticket Spesi</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+        <h3>Saldi Attuali Accumulati</h3>
+        <div class="summary-grid">
+            <div class="summary-item">Totale Ferie <span id="sumFerie">0.00 h</span></div>
+            <div class="summary-item">Totale ROL <span id="sumRol">0.00 h</span></div>
+            <div class="summary-item">Totale Ex Fest <span id="sumExFest">0.00 h</span></div>
+            <div class="summary-item">Ticket Maturati <span id="sumTicketMaturati">0</span></div>
+            <div class="summary-item">Ticket Saldo <span id="sumTicket">0</span></div>
+        </div>
+    </div>
+
+    <details>
+        <summary>⚙️ Mostra / Nascondi Dati Mensili Modificabili</summary>
+        <p style="font-size: 0.8rem; color: var(--primary); margin-top: 8px;">Modifica i valori nelle caselle sotto e premi il pulsante verde per confermare e salvare le modifiche.</p>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mese</th>
+                        <th>Ferie Mat.</th>
+                        <th>Ferie Prese</th>
+                        <th>Tot. Ferie</th>
+                        <th>ROL Mat.</th>
+                        <th>ROL Presi</th>
+                        <th>Tot. ROL</th>
+                        <th>Ex Fest. Mat.</th>
+                        <th>Ex Fest. Prese</th>
+                        <th>Tot. Ex Fest.</th>
+                        <th>Ticket Mat.</th>
+                        <th>Ticket Spesi</th>
+                        <th>Tot. Ticket</th>
+                        <th>Azione</th>
+                    </tr>
+                </thead>
+                <tbody id="tabellaCorpo"></tbody>
+            </table>
+        </div>
+
+        <button class="btn-confirm" onclick="confermaEAggiornaModifiche()">💾 Salva e Calcola Modifiche</button>
+    </details>
+</div>
+
+<script>
+    const ACCREDITO_FERIE = 14.66;
+    const ACCREDITO_ROL = 3.33;
+    const ACCREDITO_EX_FEST = 2.67;
+
+    const datiInizialiDefault = [
+        { mese: '2026-07', ferieMaturate: 14.66, feriePrese: 0, rolMaturati: 3.33, rolPresi: 0, exFestMaturate: 2.67, exFestPrese: 0, ticketMaturati: 10, ticketSpesi: 0 },
+        { mese: '2026-08', ferieMaturate: 14.66, feriePrese: 0, rolMaturati: 3.33, rolPresi: 0, exFestMaturate: 2.67, exFestPrese: 0, ticketMaturati: 20, ticketSpesi: 13 }
+    ];
+
+    let dati = [];
+    let db;
+
+    // Inizializzazione Database Compatibile WebView (IndexedDB)
+    function initDB() {
+        const request = indexedDB.open("FerieAppDB", 1);
+        request.onupgradeneeded = function(e) {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains("dati")) {
+                db.createObjectStore("dati", { keyPath: "id" });
+            }
+        };
+        request.onsuccess = function(e) {
+            db = e.target.result;
+            caricaDatiDB();
+        };
+        request.onerror = function() {
+            dati = datiInizialiDefault;
+            render();
+        };
+    }
+
+    function salvaDatiDB() {
+        if (!db) return;
+        const tx = db.transaction("dati", "readwrite");
+        const store = tx.objectStore("dati");
+        store.put({ id: "registroMensile", val: dati });
+    }
+
+    function caricaDatiDB() {
+        if (!db) return;
+        const tx = db.transaction("dati", "readonly");
+        const store = tx.objectStore("dati");
+        const request = store.get("registroMensile");
+        request.onsuccess = function() {
+            if (request.result && request.result.val) {
+                dati = request.result.val;
+            } else {
+                dati = datiInizialiDefault;
+                salvaDatiDB();
+            }
+            render();
+        };
+    }
+
+    function toggleTema() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        try { localStorage.setItem('temaFerieApp', newTheme); } catch(e){}
+        aggiornaStatoBottoneTema(newTheme);
+    }
+
+    function aggiornaStatoBottoneTema(theme) {
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+        if (theme === 'dark') {
+            icon.innerText = '☀️';
+            text.innerText = 'Tema Chiaro';
+        } else {
+            icon.innerText = '🌙';
+            text.innerText = 'Tema Scuro';
+        }
+    }
+
+    function aggiungiMese() {
+        const meseInput = document.getElementById('inputMese').value;
+        const ticketVal = document.getElementById('inputTicketVuoto').value;
+
+        if (!meseInput) {
+            alert('Per favore seleziona il mese prima di salvare.');
+            return;
+        }
+
+        if (dati.some(d => d.mese === meseInput)) {
+            alert('Questo mese è già presente!');
+            return;
+        }
+
+        dati.push({
+            mese: meseInput,
+            ferieMaturate: ACCREDITO_FERIE,
+            feriePrese: 0,
+            rolMaturati: ACCREDITO_ROL,
+            rolPresi: 0,
+            exFestMaturate: ACCREDITO_EX_FEST,
+            exFestPrese: 0,
+            ticketMaturati: ticketVal !== '' ? parseFloat(ticketVal) : 0,
+            ticketSpesi: 0
+        });
+
+        dati.sort((a, b) => a.mese.localeCompare(b.mese));
+        salvaDatiDB();
+        render();
+        
+        document.getElementById('inputMese').value = '';
+        document.getElementById('inputTicketVuoto').value = '';
+        alert('Mese inserito e accreditato con successo!');
+    }
+
+    function confermaEAggiornaModifiche() {
+        let campiValidi = true;
+
+        dati.forEach((row, index) => {
+            const fm = document.getElementById(`fm_${index}`).value;
+            const fp = document.getElementById(`fp_${index}`).value;
+            const rm = document.getElementById(`rm_${index}`).value;
+            const rp = document.getElementById(`rp_${index}`).value;
+            const efm = document.getElementById(`efm_${index}`).value;
+            const efp = document.getElementById(`efp_${index}`).value;
+
+            if (fm === '' || fp === '' || rm === '' || rp === '' || efm === '' || efp === '') {
+                campiValidi = false;
+            }
+        });
+
+        if (!campiValidi) {
+            alert('Compila tutti i campi prima di salvare le modifiche.');
+            return;
+        }
+
+        dati.forEach((row, index) => {
+            row.ferieMaturate = parseFloat(document.getElementById(`fm_${index}`).value) || 0;
+            row.feriePrese = parseFloat(document.getElementById(`fp_${index}`).value) || 0;
+            row.rolMaturati = parseFloat(document.getElementById(`rm_${index}`).value) || 0;
+            row.rolPresi = parseFloat(document.getElementById(`rp_${index}`).value) || 0;
+            row.exFestMaturate = parseFloat(document.getElementById(`efm_${index}`).value) || 0;
+            row.exFestPrese = parseFloat(document.getElementById(`efp_${index}`).value) || 0;
+            row.ticketMaturati = parseFloat(document.getElementById(`tm_${index}`).value) || 0;
+            row.ticketSpesi = parseFloat(document.getElementById(`ts_${index}`).value) || 0;
+        });
+
+        salvaDatiDB();
+        render();
+        alert('Modifiche salvate con successo!');
+    }
+
+    function aggiornaTicketMese() {
+        const index = document.getElementById('selectMeseTicket').value;
+        if (index === '') {
+            alert('Seleziona un mese per aggiornare i ticket.');
+            return;
+        }
+
+        const spesi = document.getElementById('inputTicketSpesi').value;
+        if (spesi === '') {
+            alert('Inserisci la quantità di ticket spesi.');
+            return;
+        }
+
+        dati[index].ticketSpesi = parseFloat(spesi) || 0;
+        salvaDatiDB();
+        render();
+        document.getElementById('inputTicketSpesi').value = '';
+        alert('Ticket spesi aggiornati!');
+    }
+
+    function eliminaMese(index) {
+        if (confirm('Vuoi cancellare questa riga?')) {
+            dati.splice(index, 1);
+            salvaDatiDB();
+            render();
+        }
+    }
+
+    function render() {
+        const tbody = document.getElementById('tabellaCorpo');
+        const selectTicket = document.getElementById('selectMeseTicket');
+        tbody.innerHTML = '';
+        selectTicket.innerHTML = '<option value="">-- Seleziona Mese --</option>';
+
+        let cumFerie = 0;
+        let cumRol = 0;
+        let cumExFest = 0;
+        let totTicketMaturati = 0;
+        let cumTicket = 0;
+
+        dati.forEach((row, index) => {
+            cumFerie += (row.ferieMaturate - row.feriePrese);
+            cumRol += (row.rolMaturati - row.rolPresi);
+            cumExFest += (row.exFestMaturate - row.exFestPrese);
+            totTicketMaturati += row.ticketMaturati;
+            cumTicket += (row.ticketMaturati - row.ticketSpesi);
+
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.innerText = row.mese;
+            selectTicket.appendChild(opt);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${row.mese}</strong></td>
+                <td><input type="number" step="0.01" id="fm_${index}" class="table-input" value="${row.ferieMaturate}" required></td>
+                <td><input type="number" step="0.01" id="fp_${index}" class="table-input" value="${row.feriePrese}" required></td>
+                <td class="highlight">${cumFerie.toFixed(2)}</td>
+                <td><input type="number" step="0.01" id="rm_${index}" class="table-input" value="${row.rolMaturati}" required></td>
+                <td><input type="number" step="0.01" id="rp_${index}" class="table-input" value="${row.rolPresi}" required></td>
+                <td class="highlight">${cumRol.toFixed(2)}</td>
+                <td><input type="number" step="0.01" id="efm_${index}" class="table-input" value="${row.exFestMaturate}" required></td>
+                <td><input type="number" step="0.01" id="efp_${index}" class="table-input" value="${row.exFestPrese}" required></td>
+                <td class="highlight">${cumExFest.toFixed(2)}</td>
+                <td><input type="number" id="tm_${index}" class="table-input" value="${row.ticketMaturati}"></td>
+                <td><input type="number" id="ts_${index}" class="table-input" value="${row.ticketSpesi}"></td>
+                <td class="highlight">${cumTicket}</td>
+                <td><button class="btn-del" onclick="eliminaMese(${index})">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('sumFerie').innerText = cumFerie.toFixed(2) + ' h';
+        document.getElementById('sumRol').innerText = cumRol.toFixed(2) + ' h';
+        document.getElementById('sumExFest').innerText = cumExFest.toFixed(2) + ' h';
+        document.getElementById('sumTicketMaturati').innerText = totTicketMaturati;
+        document.getElementById('sumTicket').innerText = cumTicket;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initDB();
+    });
+</script>
+
+</body>
+</html>
