@@ -257,7 +257,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Mese</th>
+                        <th>Mese ed Anno</th>
                         <th>Ferie Mat.</th>
                         <th>Ferie Prese</th>
                         <th>Tot. Ferie</th>
@@ -286,54 +286,45 @@
     const ACCREDITO_ROL = 3.33;
     const ACCREDITO_EX_FEST = 2.67;
 
+    // Salvataggio predefinito direttamente nel codice
     const datiInizialiDefault = [
         { mese: '2026-07', ferieMaturate: 14.66, feriePrese: 0, rolMaturati: 3.33, rolPresi: 0, exFestMaturate: 2.67, exFestPrese: 0, ticketMaturati: 10, ticketSpesi: 0 },
         { mese: '2026-08', ferieMaturate: 14.66, feriePrese: 0, rolMaturati: 3.33, rolPresi: 0, exFestMaturate: 2.67, exFestPrese: 0, ticketMaturati: 20, ticketSpesi: 13 }
     ];
 
     let dati = [];
-    let db;
 
-    // Inizializzazione Database Compatibile WebView (IndexedDB)
-    function initDB() {
-        const request = indexedDB.open("FerieAppDB", 1);
-        request.onupgradeneeded = function(e) {
-            let db = e.target.result;
-            if (!db.objectStoreNames.contains("dati")) {
-                db.createObjectStore("dati", { keyPath: "id" });
-            }
-        };
-        request.onsuccess = function(e) {
-            db = e.target.result;
-            caricaDatiDB();
-        };
-        request.onerror = function() {
-            dati = datiInizialiDefault;
-            render();
-        };
-    }
-
-    function salvaDatiDB() {
-        if (!db) return;
-        const tx = db.transaction("dati", "readwrite");
-        const store = tx.objectStore("dati");
-        store.put({ id: "registroMensile", val: dati });
-    }
-
-    function caricaDatiDB() {
-        if (!db) return;
-        const tx = db.transaction("dati", "readonly");
-        const store = tx.objectStore("dati");
-        const request = store.get("registroMensile");
-        request.onsuccess = function() {
-            if (request.result && request.result.val) {
-                dati = request.result.val;
-            } else {
+    function caricaDatiIniziali() {
+        const saved = localStorage.getItem('datiFerieApp');
+        if (saved) {
+            try {
+                dati = JSON.parse(saved);
+            } catch(e) {
                 dati = datiInizialiDefault;
-                salvaDatiDB();
             }
-            render();
-        };
+        } else {
+            dati = datiInizialiDefault;
+            salvaDati();
+        }
+    }
+
+    function salvaDati() {
+        localStorage.setItem('datiFerieApp', JSON.stringify(dati));
+    }
+
+    function impostaMeseCorrente() {
+        const oggi = new Date();
+        const anno = oggi.getFullYear();
+        const mese = String(oggi.getMonth() + 1).padStart(2, '0');
+        document.getElementById('inputMese').value = `${anno}-${mese}`;
+    }
+
+    function formattaMeseAnno(strMese) {
+        if (!strMese) return '';
+        const [anno, mese] = strMese.split('-');
+        const data = new Date(anno, parseInt(mese) - 1, 1);
+        const nomeMese = data.toLocaleString('it-IT', { month: 'long' });
+        return nomeMese.charAt(0).toUpperCase() + nomeMese.slice(1) + ' ' + anno;
     }
 
     function toggleTema() {
@@ -383,10 +374,10 @@
         });
 
         dati.sort((a, b) => a.mese.localeCompare(b.mese));
-        salvaDatiDB();
+        salvaDati();
         render();
         
-        document.getElementById('inputMese').value = '';
+        impostaMeseCorrente();
         document.getElementById('inputTicketVuoto').value = '';
         alert('Mese inserito e accreditato con successo!');
     }
@@ -423,7 +414,7 @@
             row.ticketSpesi = parseFloat(document.getElementById(`ts_${index}`).value) || 0;
         });
 
-        salvaDatiDB();
+        salvaDati();
         render();
         alert('Modifiche salvate con successo!');
     }
@@ -442,7 +433,7 @@
         }
 
         dati[index].ticketSpesi = parseFloat(spesi) || 0;
-        salvaDatiDB();
+        salvaDati();
         render();
         document.getElementById('inputTicketSpesi').value = '';
         alert('Ticket spesi aggiornati!');
@@ -451,7 +442,7 @@
     function eliminaMese(index) {
         if (confirm('Vuoi cancellare questa riga?')) {
             dati.splice(index, 1);
-            salvaDatiDB();
+            salvaDati();
             render();
         }
     }
@@ -477,12 +468,12 @@
 
             const opt = document.createElement('option');
             opt.value = index;
-            opt.innerText = row.mese;
+            opt.innerText = formattaMeseAnno(row.mese);
             selectTicket.appendChild(opt);
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${row.mese}</strong></td>
+                <td><strong>${formattaMeseAnno(row.mese)}</strong></td>
                 <td><input type="number" step="0.01" id="fm_${index}" class="table-input" value="${row.ferieMaturate}" required></td>
                 <td><input type="number" step="0.01" id="fp_${index}" class="table-input" value="${row.feriePrese}" required></td>
                 <td class="highlight">${cumFerie.toFixed(2)}</td>
@@ -508,7 +499,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        initDB();
+        caricaDatiIniziali();
+        impostaMeseCorrente();
+        render();
     });
 </script>
 
