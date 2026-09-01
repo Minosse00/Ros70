@@ -212,7 +212,7 @@
 
     <div class="grid-forms">
         <div class="card">
-            <h3>+ Aggiungi Mese</h3>
+            <h3>+ Aggiungi Mese Manuale</h3>
             <div class="form-row">
                 <label for="inputMese">Mese *:</label>
                 <input type="month" id="inputMese" required>
@@ -221,7 +221,7 @@
                 <label for="inputTicketVuoto">Ticket (opzionale):</label>
                 <input type="number" id="inputTicketVuoto" placeholder="Inserisci quantità se presente">
             </div>
-            <button onclick="aggiungiMese()">Accredita Mese (+14.66h / +3.33h / +2.67h)</button>
+            <button onclick="aggiungiMeseManuale()">Accredita Mese (+14.66h / +3.33h / +2.67h)</button>
         </div>
 
         <div class="card">
@@ -286,7 +286,6 @@
     const ACCREDITO_ROL = 3.33;
     const ACCREDITO_EX_FEST = 2.67;
 
-    // Salvataggio predefinito direttamente nel codice
     const datiInizialiDefault = [
         { mese: '2026-07', ferieMaturate: 14.66, feriePrese: 0, rolMaturati: 3.33, rolPresi: 0, exFestMaturate: 2.67, exFestPrese: 0, ticketMaturati: 10, ticketSpesi: 0 },
         { mese: '2026-08', ferieMaturate: 14.66, feriePrese: 0, rolMaturati: 3.33, rolPresi: 0, exFestMaturate: 2.67, exFestPrese: 0, ticketMaturati: 20, ticketSpesi: 13 }
@@ -295,28 +294,56 @@
     let dati = [];
 
     function caricaDatiIniziali() {
-        const saved = localStorage.getItem('datiFerieApp');
-        if (saved) {
-            try {
+        try {
+            const saved = localStorage.getItem('datiFerieApp');
+            if (saved) {
                 dati = JSON.parse(saved);
-            } catch(e) {
-                dati = datiInizialiDefault;
+            } else {
+                dati = JSON.parse(JSON.stringify(datiInizialiDefault));
+                salvaDati();
             }
-        } else {
-            dati = datiInizialiDefault;
-            salvaDati();
+        } catch(e) {
+            dati = JSON.parse(JSON.stringify(datiInizialiDefault));
         }
     }
 
     function salvaDati() {
-        localStorage.setItem('datiFerieApp', JSON.stringify(dati));
+        try {
+            localStorage.setItem('datiFerieApp', JSON.stringify(dati));
+        } catch(e) {}
     }
 
-    function impostaMeseCorrente() {
+    // Funzione che controlla e accredita automaticamente il mese corrente se manca
+    function controllaEAccreditaMeseAutomatico() {
         const oggi = new Date();
         const anno = oggi.getFullYear();
         const mese = String(oggi.getMonth() + 1).padStart(2, '0');
-        document.getElementById('inputMese').value = `${anno}-${mese}`;
+        const meseCorrenteStr = `${anno}-${mese}`;
+
+        // Se il mese corrente non è presente tra i dati, lo aggiunge in automatico
+        if (!dati.some(d => d.mese === meseCorrenteStr)) {
+            dati.push({
+                mese: meseCorrenteStr,
+                ferieMaturate: ACCREDITO_FERIE,
+                feriePrese: 0,
+                rolMaturati: ACCREDITO_ROL,
+                rolPresi: 0,
+                exFestMaturate: ACCREDITO_EX_FEST,
+                exFestPrese: 0,
+                ticketMaturati: 0,
+                ticketSpesi: 0
+            });
+            dati.sort((a, b) => a.mese.localeCompare(b.mese));
+            salvaDati();
+        }
+    }
+
+    function impostaMeseCorrenteInput() {
+        const oggi = new Date();
+        const anno = oggi.getFullYear();
+        const mese = String(oggi.getMonth() + 1).padStart(2, '0');
+        const elem = document.getElementById('inputMese');
+        if (elem) elem.value = `${anno}-${mese}`;
     }
 
     function formattaMeseAnno(strMese) {
@@ -338,16 +365,18 @@
     function aggiornaStatoBottoneTema(theme) {
         const icon = document.getElementById('themeIcon');
         const text = document.getElementById('themeText');
-        if (theme === 'dark') {
-            icon.innerText = '☀️';
-            text.innerText = 'Tema Chiaro';
-        } else {
-            icon.innerText = '🌙';
-            text.innerText = 'Tema Scuro';
+        if (icon && text) {
+            if (theme === 'dark') {
+                icon.innerText = '☀️';
+                text.innerText = 'Tema Chiaro';
+            } else {
+                icon.innerText = '🌙';
+                text.innerText = 'Tema Scuro';
+            }
         }
     }
 
-    function aggiungiMese() {
+    function aggiungiMeseManuale() {
         const meseInput = document.getElementById('inputMese').value;
         const ticketVal = document.getElementById('inputTicketVuoto').value;
 
@@ -377,7 +406,7 @@
         salvaDati();
         render();
         
-        impostaMeseCorrente();
+        impostaMeseCorrenteInput();
         document.getElementById('inputTicketVuoto').value = '';
         alert('Mese inserito e accreditato con successo!');
     }
@@ -450,6 +479,8 @@
     function render() {
         const tbody = document.getElementById('tabellaCorpo');
         const selectTicket = document.getElementById('selectMeseTicket');
+        if (!tbody || !selectTicket) return;
+
         tbody.innerHTML = '';
         selectTicket.innerHTML = '<option value="">-- Seleziona Mese --</option>';
 
@@ -500,7 +531,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         caricaDatiIniziali();
-        impostaMeseCorrente();
+        controllaEAccreditaMeseAutomatico();
+        impostaMeseCorrenteInput();
         render();
     });
 </script>
