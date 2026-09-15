@@ -85,7 +85,7 @@
             margin-bottom: 10px;
         }
 
-        .card {
+        details.card {
             background: var(--card-bg);
             padding: 10px 12px;
             border-radius: 8px;
@@ -93,12 +93,18 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
-        .card h3 {
-            margin-top: 0;
-            margin-bottom: 8px;
+        details.card summary {
+            font-weight: bold;
             font-size: 0.95rem;
             color: var(--text-heading);
+            cursor: pointer;
+            outline: none;
+            padding-bottom: 2px;
+        }
+
+        details.card[open] summary {
             border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
             padding-bottom: 5px;
         }
 
@@ -157,14 +163,14 @@
             margin-top: 2px;
         }
 
-        details {
+        details:not(.card) {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 8px 12px;
             margin-bottom: 10px;
         }
-        summary {
+        details:not(.card) summary {
             font-weight: bold;
             font-size: 0.9rem;
             color: var(--text-heading);
@@ -214,11 +220,12 @@
         </button>
     </div>
 
+    <!-- Voci d'inserimento a scomparsa -->
     <div class="grid-forms">
         <!-- Scheda Aggiungi Mese / Accredito -->
-        <div class="card">
-            <h3>+ Aggiungi Mese Manuale</h3>
-            <div class="form-row">
+        <details class="card">
+            <summary>➕ Aggiungi Mese Manuale</summary>
+            <div class="form-row" style="margin-top: 8px;">
                 <label for="inputMese">Mese *:</label>
                 <input type="month" id="inputMese" autocomplete="off" required>
             </div>
@@ -227,12 +234,12 @@
                 <input type="number" id="inputTicketVuoto" placeholder="Qtà se presente">
             </div>
             <button onclick="aggiungiMeseManuale()">Accredita Mese (+14.66h / +3.33h / +2.67h)</button>
-        </div>
+        </details>
 
         <!-- Scheda Registrazione Ferie / ROL / Ex Fest con Data -->
-        <div class="card">
-            <h3>🏖️ Registra Ferie / ROL / Ex Fest</h3>
-            <div class="form-row">
+        <details class="card">
+            <summary>🏖️ Registra Ferie / ROL / Ex Fest</summary>
+            <div class="form-row" style="margin-top: 8px;">
                 <label for="inputDataFerieRol">Data Giorno *:</label>
                 <input type="date" id="inputDataFerieRol" autocomplete="off" required>
             </div>
@@ -249,12 +256,12 @@
                 <input type="number" step="0.5" id="inputOrePermesso" value="8" placeholder="es. 8 o 4" required>
             </div>
             <button style="background-color: var(--secondary);" onclick="aggiungiFerieRolPresi()">Registra Assenza</button>
-        </div>
+        </details>
 
         <!-- Gestione Quick Ticket -->
-        <div class="card">
-            <h3>🎫 Gestione Quick Ticket</h3>
-            <div class="form-row">
+        <details class="card">
+            <summary>🎫 Gestione Quick Ticket</summary>
+            <div class="form-row" style="margin-top: 8px;">
                 <label for="selectMeseTicket">Seleziona Mese:</label>
                 <select id="selectMeseTicket"></select>
             </div>
@@ -263,12 +270,12 @@
                 <input type="number" id="inputTicketSpesi" placeholder="es. 5">
             </div>
             <button style="background-color: #0284c7;" onclick="aggiornaTicketMese()">Aggiorna Ticket Spesi</button>
-        </div>
+        </details>
 
         <!-- Registrazione Malattia -->
-        <div class="card">
-            <h3>🏥 Registra Giorno Malattia</h3>
-            <div class="form-row">
+        <details class="card">
+            <summary>🏥 Registra Giorno Malattia</summary>
+            <div class="form-row" style="margin-top: 8px;">
                 <label for="inputDataMalattia">Giorno esatto *:</label>
                 <input type="date" id="inputDataMalattia" autocomplete="off" required>
             </div>
@@ -277,23 +284,24 @@
                 <input type="text" id="inputNoteMalattia" placeholder="es. Certificato N. 1234">
             </div>
             <button style="background-color: var(--warning);" onclick="aggiungiMalattia()">Inserisci Malattia</button>
-        </div>
+        </details>
 
         <!-- Scheda Backup e Ripristino -->
-        <div class="card">
-            <h3>💾 Backup e Ripristino</h3>
-            <div class="form-row">
+        <details class="card">
+            <summary>💾 Backup e Ripristino</summary>
+            <div class="form-row" style="margin-top: 8px;">
                 <button style="background-color: #10b981;" onclick="esportaDati()">Esporta Dati (.json)</button>
             </div>
             <div class="form-row">
                 <label for="fileImport" style="cursor: pointer; background: var(--border); padding: 7px; border-radius: 4px; text-align: center; font-size: 0.85rem; font-weight: 600; display: block; color: var(--text);">📁 Importa Dati</label>
                 <input type="file" id="fileImport" accept=".json" style="display: none;" onchange="importaDati(event)">
             </div>
-        </div>
+        </details>
     </div>
 
-    <div class="card" style="margin-bottom: 10px;">
-        <h3 style="margin-bottom: 6px;">Saldi Attuali Accumulati</h3>
+    <!-- Riepilogo Saldi -->
+    <div class="card" style="margin-bottom: 10px; background: var(--card-bg); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);">
+        <h3 style="margin-top: 0; margin-bottom: 6px; font-size: 0.95rem; color: var(--text-heading);">Saldi Attuali Accumulati</h3>
         <div class="summary-grid">
             <div class="summary-item">Totale Ferie <span id="sumFerie">0.00 h</span></div>
             <div class="summary-item">Totale ROL <span id="sumRol">0.00 h</span></div>
@@ -476,10 +484,9 @@
         if (elemDataFR) elemDataFR.value = dataOggiStr;
     }
 
-    // Accredita automaticamente tutti i mesi da Luglio 2026 fino al mese corrente
     function verificaEInizializzaMesiDaLuglio2026() {
         const oggi = new Date();
-        let dataIter = new Date(2026, 6, 1); // Luglio 2026 (mese 6 in JS)
+        let dataIter = new Date(2026, 6, 1); // Luglio 2026
         const limiteData = new Date(oggi.getFullYear(), oggi.getMonth(), 1);
 
         while (dataIter <= limiteData) {
@@ -738,7 +745,6 @@
         tbodyFerieRol.innerHTML = '';
         selectTicket.innerHTML = '<option value="">-- Seleziona Mese --</option>';
 
-        // Render Ferie/ROL Presi
         if (ferieRolPresi.length === 0) {
             tbodyFerieRol.innerHTML = '<tr><td colspan="5">Nessun permesso o ferie registrato</td></tr>';
         } else {
@@ -756,7 +762,6 @@
             });
         }
 
-        // Render Malattie
         if (malattie.length === 0) {
             tbodyMalattie.innerHTML = '<tr><td colspan="4">Nessun giorno di malattia registrato</td></tr>';
         } else {
