@@ -143,7 +143,7 @@
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 6px;
             margin-top: 6px;
         }
@@ -222,18 +222,30 @@
 
     <!-- Voci d'inserimento a scomparsa -->
     <div class="grid-forms">
-        <!-- Scheda Aggiungi Mese / Accredito -->
+        <!-- Scheda Aggiungi o Aggiorna Mese -->
         <details class="card">
-            <summary>➕ Aggiungi Mese Manuale</summary>
+            <summary>➕ Aggiungi / Aggiorna Mese</summary>
             <div class="form-row" style="margin-top: 8px;">
                 <label for="inputMese">Mese *:</label>
                 <input type="month" id="inputMese" autocomplete="off" required>
             </div>
             <div class="form-row">
-                <label for="inputTicketVuoto">Ticket (opzionale):</label>
-                <input type="number" id="inputTicketVuoto" placeholder="Qtà se presente">
+                <label for="inputFerieMat">Ferie Maturate (h):</label>
+                <input type="number" step="0.01" id="inputFerieMat" value="14.66">
             </div>
-            <button onclick="aggiungiMeseManuale()">Accredita Mese (+14.66h / +3.33h / +2.67h)</button>
+            <div class="form-row">
+                <label for="inputRolMat">ROL Maturati (h):</label>
+                <input type="number" step="0.01" id="inputRolMat" value="3.33">
+            </div>
+            <div class="form-row">
+                <label for="inputExFestMat">Ex Fest. Maturate (h):</label>
+                <input type="number" step="0.01" id="inputExFestMat" value="2.67">
+            </div>
+            <div class="form-row">
+                <label for="inputTicketMat">Ticket Maturati:</label>
+                <input type="number" id="inputTicketMat" value="0" placeholder="es. 20">
+            </div>
+            <button onclick="aggiungiOAggiornaMese()">Salva / Aggiorna Mese</button>
         </details>
 
         <!-- Scheda Registrazione Ferie / ROL / Ex Fest con Data -->
@@ -393,16 +405,16 @@
 
     function caricaDatiIniziali() {
         try {
-            const saved = localStorage.getItem('datiFerieApp');
+            const saved = localStorage.getItem('datiFerieAppNo104');
             if (saved) dati = JSON.parse(saved);
 
-            const savedMalattie = localStorage.getItem('datiMalattieApp');
+            const savedMalattie = localStorage.getItem('datiMalattieAppNo104');
             if (savedMalattie) malattie = JSON.parse(savedMalattie);
 
-            const savedFerieRol = localStorage.getItem('datiFerieRolPresiApp');
+            const savedFerieRol = localStorage.getItem('datiFerieRolPresiAppNo104');
             if (savedFerieRol) ferieRolPresi = JSON.parse(savedFerieRol);
 
-            const savedTema = localStorage.getItem('temaFerieApp');
+            const savedTema = localStorage.getItem('temaFerieAppNo104');
             if (savedTema) {
                 document.documentElement.setAttribute('data-theme', savedTema);
                 aggiornaStatoBottoneTema(savedTema);
@@ -416,9 +428,9 @@
 
     function salvaDati() {
         try {
-            localStorage.setItem('datiFerieApp', JSON.stringify(dati));
-            localStorage.setItem('datiMalattieApp', JSON.stringify(malattie));
-            localStorage.setItem('datiFerieRolPresiApp', JSON.stringify(ferieRolPresi));
+            localStorage.setItem('datiFerieAppNo104', JSON.stringify(dati));
+            localStorage.setItem('datiMalattieAppNo104', JSON.stringify(malattie));
+            localStorage.setItem('datiFerieRolPresiAppNo104', JSON.stringify(ferieRolPresi));
         } catch(e) {}
     }
 
@@ -452,7 +464,7 @@
                     if (content.tema) {
                         document.documentElement.setAttribute('data-theme', content.tema);
                         aggiornaStatoBottoneTema(content.tema);
-                        try { localStorage.setItem('temaFerieApp', content.tema); } catch(e){}
+                        try { localStorage.setItem('temaFerieAppNo104', content.tema); } catch(e){}
                     }
                     salvaDati();
                     render();
@@ -533,7 +545,7 @@
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
-        try { localStorage.setItem('temaFerieApp', newTheme); } catch(e){}
+        try { localStorage.setItem('temaFerieAppNo104', newTheme); } catch(e){}
         aggiornaStatoBottoneTema(newTheme);
     }
 
@@ -568,38 +580,51 @@
         }
     }
 
-    function aggiungiMeseManuale() {
+    function aggiungiOAggiornaMese() {
         const meseInput = document.getElementById('inputMese').value;
-        const ticketVal = document.getElementById('inputTicketVuoto').value;
+        const ferieMat = parseFloat(document.getElementById('inputFerieMat').value) || 0;
+        const rolMat = parseFloat(document.getElementById('inputRolMat').value) || 0;
+        const exFestMat = parseFloat(document.getElementById('inputExFestMat').value) || 0;
+        const ticketMat = parseFloat(document.getElementById('inputTicketMat').value) || 0;
 
         if (!meseInput) {
-            alert('Per favore seleziona il mese prima di salvare.');
+            alert('Per favore seleziona il mese.');
             return;
         }
 
-        if (dati.some(d => d.mese === meseInput)) {
-            alert('Questo mese è già presente!');
-            return;
-        }
+        const indiceEsistente = dati.findIndex(d => d.mese === meseInput);
 
-        dati.push({
-            mese: meseInput,
-            ferieMaturate: ACCREDITO_FERIE,
-            feriePrese: 0,
-            rolMaturati: ACCREDITO_ROL,
-            rolPresi: 0,
-            exFestMaturate: ACCREDITO_EX_FEST,
-            exFestPrese: 0,
-            ticketMaturati: ticketVal !== '' ? parseFloat(ticketVal) : 0,
-            ticketSpesi: 0
-        });
+        if (indiceEsistente !== -1) {
+            dati[indiceEsistente].ferieMaturate = ferieMat;
+            dati[indiceEsistente].rolMaturati = rolMat;
+            dati[indiceEsistente].exFestMaturate = exFestMat;
+            dati[indiceEsistente].ticketMaturati = ticketMat;
+            alert('Mese già presente: dati aggiornati con successo!');
+        } else {
+            dati.push({
+                mese: meseInput,
+                ferieMaturate: ferieMat,
+                feriePrese: 0,
+                rolMaturati: rolMat,
+                rolPresi: 0,
+                exFestMaturate: exFestMat,
+                exFestPrese: 0,
+                ticketMaturati: ticketMat,
+                ticketSpesi: 0
+            });
+            alert('Nuovo mese inserito con successo!');
+        }
 
         dati.sort((a, b) => a.mese.localeCompare(b.mese));
         salvaDati();
         render();
-        
-        document.getElementById('inputTicketVuoto').value = '';
-        alert('Mese inserito e accreditato con successo!');
+
+        // Azzeramento / Ripristino campi scheda Mese
+        document.getElementById('inputFerieMat').value = ACCREDITO_FERIE;
+        document.getElementById('inputRolMat').value = ACCREDITO_ROL;
+        document.getElementById('inputExFestMat').value = ACCREDITO_EX_FEST;
+        document.getElementById('inputTicketMat').value = '0';
+        impostaMeseCorrenteInput();
     }
 
     function aggiungiFerieRolPresi() {
@@ -626,6 +651,10 @@
         salvaDati();
         render();
         alert('Assenza registrata con successo!');
+
+        // Azzeramento / Ripristino campi scheda Ferie/ROL
+        document.getElementById('inputOrePermesso').value = '8';
+        impostaMeseCorrenteInput();
     }
 
     function eliminaFerieRolPresi(index) {
@@ -657,9 +686,11 @@
         malattie.sort((a, b) => a.data.localeCompare(b.data));
         salvaDati();
         render();
-
-        document.getElementById('inputNoteMalattia').value = '';
         alert('Giorno di malattia registrato!');
+
+        // Azzeramento / Ripristino campi scheda Malattia
+        document.getElementById('inputNoteMalattia').value = '';
+        impostaMeseCorrenteInput();
     }
 
     function eliminaMalattia(index) {
@@ -717,7 +748,10 @@
         dati[index].ticketSpesi = parseFloat(spesi) || 0;
         salvaDati();
         render();
+        
+        // Azzeramento / Ripristino campi Quick Ticket
         document.getElementById('inputTicketSpesi').value = '';
+        document.getElementById('selectMeseTicket').value = '';
         alert('Ticket spesi aggiornati!');
     }
 
