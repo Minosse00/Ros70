@@ -198,6 +198,7 @@
 
         .highlight { font-weight: bold; background-color: var(--highlight-bg); color: var(--highlight-text); }
         .btn-del { background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        .btn-edit { background: var(--secondary); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; margin-right: 4px; }
 
         .badge {
             padding: 3px 8px;
@@ -251,7 +252,6 @@
         </button>
     </div>
 
-    <!-- Tutti i menu a tendina senza l'attributo "open", quindi chiusi all'avvio -->
     <details>
         <summary>📅 + Aggiungi Mese / Accredito Manuale</summary>
         <div style="margin-top: 12px;">
@@ -360,7 +360,6 @@
         </div>
     </details>
 
-    <!-- Saldi Totali Accumulati (ESCLUSO: Sempre visibile in primo piano) -->
     <div class="card" style="margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div>
@@ -691,7 +690,10 @@
                 <td>${f.giorniLavorativi}</td>
                 <td>${f.oreTotali.toFixed(2)} h</td>
                 <td>${f.note || ''}</td>
-                <td><button class="btn-del" onclick="eliminaFerie(${idx})">Elimina</button></td>
+                <td>
+                    <button class="btn-edit" onclick="apriModalEdit('FERIE', ${idx})">Modifica</button>
+                    <button class="btn-del" onclick="eliminaFerie(${idx})">Elimina</button>
+                </td>
             </tr>`;
         });
         document.getElementById('tabellaFerieCorpo').innerHTML = htmlFerie || '<tr><td colspan="6">Nessuna assenza registrata</td></tr>';
@@ -703,7 +705,10 @@
                 <td>${m.giorniLavorativi}</td>
                 <td>${formattaMeseAnno(m.dataInizio.substring(0, 7))}</td>
                 <td>${m.note || ''}</td>
-                <td><button class="btn-del" onclick="eliminaMalattia(${idx})">Elimina</button></td>
+                <td>
+                    <button class="btn-edit" onclick="apriModalEdit('MALATTIA', ${idx})">Modifica</button>
+                    <button class="btn-del" onclick="eliminaMalattia(${idx})">Elimina</button>
+                </td>
             </tr>`;
         });
         document.getElementById('tabellaMalattieCorpo').innerHTML = htmlMalattie || '<tr><td colspan="5">Nessuna malattia registrata</td></tr>';
@@ -715,7 +720,10 @@
                 <td>${formattaMeseAnno(t.meseRif)}</td>
                 <td>${t.quantita}</td>
                 <td>${t.note || ''}</td>
-                <td><button class="btn-del" onclick="eliminaTicket(${idx})">Elimina</button></td>
+                <td>
+                    <button class="btn-edit" onclick="apriModalEdit('TICKET', ${idx})">Modifica</button>
+                    <button class="btn-del" onclick="eliminaTicket(${idx})">Elimina</button>
+                </td>
             </tr>`;
         });
         document.getElementById('tabellaTicketCorpo').innerHTML = htmlTicket || '<tr><td colspan="5">Nessun ticket speso registrato</td></tr>';
@@ -894,6 +902,156 @@
         document.getElementById('inputTicketNote').value = '';
         render();
         alert("Ticket speso registrato con successo!");
+    }
+
+    /* GESTIONE MODALE DI MODIFICA */
+    function apriModalEdit(tipo, index) {
+        currentEditState = { type: tipo, index: index };
+        const modal = document.getElementById('modalEdit');
+        const title = document.getElementById('modalTitle');
+        const body = document.getElementById('modalBody');
+
+        if (tipo === 'FERIE') {
+            const item = ferieLog[index];
+            const oreGiorno = item.giorniLavorativi > 0 ? (item.oreTotali / item.giorniLavorativi) : 8;
+            title.innerText = "Modifica Ferie / Permesso";
+            body.innerHTML = `
+                <div class="form-row">
+                    <label>Tipo Assenza:</label>
+                    <select id="editFerieTipo">
+                        <option value="FERIE" ${item.tipo === 'FERIE' ? 'selected' : ''}>Ferie</option>
+                        <option value="ROL" ${item.tipo === 'ROL' ? 'selected' : ''}>ROL (Permesso)</option>
+                        <option value="EX_FEST" ${item.tipo === 'EX_FEST' ? 'selected' : ''}>Ex Festività</option>
+                    </select>
+                </div>
+                <div class="form-row-group">
+                    <div class="form-row">
+                        <label>Data Inizio:</label>
+                        <input type="date" id="editFerieDataInizio" value="${item.dataInizio}">
+                    </div>
+                    <div class="form-row">
+                        <label>Data Fine:</label>
+                        <input type="date" id="editFerieDataFine" value="${item.dataFine}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Ore Giornaliere:</label>
+                    <input type="number" id="editFerieOreGiorno" value="${oreGiorno}" step="0.5">
+                </div>
+                <div class="form-row">
+                    <label>Note:</label>
+                    <input type="text" id="editFerieNote" value="${item.note || ''}">
+                </div>
+            `;
+        } else if (tipo === 'MALATTIA') {
+            const item = malattieLog[index];
+            title.innerText = "Modifica Malattia";
+            body.innerHTML = `
+                <div class="form-row-group">
+                    <div class="form-row">
+                        <label>Data Inizio:</label>
+                        <input type="date" id="editMalattiaDataInizio" value="${item.dataInizio}">
+                    </div>
+                    <div class="form-row">
+                        <label>Data Fine:</label>
+                        <input type="date" id="editMalattiaDataFine" value="${item.dataFine}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Note / Certificato:</label>
+                    <input type="text" id="editMalattiaNote" value="${item.note || ''}">
+                </div>
+            `;
+        } else if (tipo === 'TICKET') {
+            const item = ticketLog[index];
+            title.innerText = "Modifica Ticket Speso";
+            
+            let opzioniMesi = dati.map(d => `<option value="${d.mese}" ${d.mese === item.meseRif ? 'selected' : ''}>${formattaMeseAnno(d.mese)}</option>`).join('');
+
+            body.innerHTML = `
+                <div class="form-row">
+                    <label>Data Esatta:</label>
+                    <input type="date" id="editTicketData" value="${item.dataEsatta}">
+                </div>
+                <div class="form-row">
+                    <label>Mese Riferimento:</label>
+                    <select id="editTicketMeseRif">${opzioniMesi}</select>
+                </div>
+                <div class="form-row">
+                    <label>Quantità:</label>
+                    <input type="number" id="editTicketQuantita" value="${item.quantita}" min="1">
+                </div>
+                <div class="form-row">
+                    <label>Note:</label>
+                    <input type="text" id="editTicketNote" value="${item.note || ''}">
+                </div>
+            `;
+        }
+        modal.style.display = 'flex';
+    }
+
+    function chiudiModal() {
+        document.getElementById('modalEdit').style.display = 'none';
+        currentEditState = { type: null, index: -1 };
+    }
+
+    function salvaModalEdit() {
+        const { type, index } = currentEditState;
+        if (index < 0 || !type) return;
+
+        if (type === 'FERIE') {
+            const t = document.getElementById('editFerieTipo').value;
+            const dI = document.getElementById('editFerieDataInizio').value;
+            const dF = document.getElementById('editFerieDataFine').value;
+            const oG = parseFloat(document.getElementById('editFerieOreGiorno').value) || 8;
+            const n = document.getElementById('editFerieNote').value;
+
+            if (!dI || !dF) { alert("Compila le date!"); return; }
+            let gg = calcolaGiorniLavorativi(dI, dF);
+            if (gg <= 0) { alert("Intervallo di date non valido!"); return; }
+
+            ferieLog[index] = {
+                tipo: t,
+                dataInizio: dI,
+                dataFine: dF,
+                giorniLavorativi: gg,
+                oreTotali: gg * oG,
+                note: n
+            };
+        } else if (type === 'MALATTIA') {
+            const dI = document.getElementById('editMalattiaDataInizio').value;
+            const dF = document.getElementById('editMalattiaDataFine').value;
+            const n = document.getElementById('editMalattiaNote').value;
+
+            if (!dI || !dF) { alert("Compila le date!"); return; }
+            let gg = calcolaGiorniLavorativi(dI, dF);
+            if (gg <= 0) { alert("Intervallo di date non valido!"); return; }
+
+            malattieLog[index] = {
+                dataInizio: dI,
+                dataFine: dF,
+                giorniLavorativi: gg,
+                note: n
+            };
+        } else if (type === 'TICKET') {
+            const dE = document.getElementById('editTicketData').value;
+            const mR = document.getElementById('editTicketMeseRif').value;
+            const q = parseInt(document.getElementById('editTicketQuantita').value) || 1;
+            const n = document.getElementById('editTicketNote').value;
+
+            if (!dE || !mR) { alert("Compila i campi obbligatori!"); return; }
+
+            ticketLog[index] = {
+                dataEsatta: dE,
+                meseRif: mR,
+                quantita: q,
+                note: n
+            };
+        }
+
+        chiudiModal();
+        render();
+        alert("Modifica salvata con successo!");
     }
 
     function eliminaFerie(idx) {
