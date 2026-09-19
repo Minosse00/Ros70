@@ -1,0 +1,59 @@
+{
+  "name": "GPS Map Camera SP",
+  "short_name": "GPS Camera",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#030712",
+  "icons": [
+    {
+      "src": "GestioneFerie.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
+```[cite: 2]
+
+---
+
+### 2. File `sw.js` Aggiornato
+```javascript
+const CACHE_NAME = 'gps-camera-v15';
+const urlsToCache = [
+  './index.html',
+  './manifest.json',
+  './GestioneFerie.jpg',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+  );
+});
+```[cite: 2]
+
+---
+
+### 3. File `index.html` (Riferimenti Icona Aggiornati)
+Assicurati che nella sezione `<head>` del tuo file `index.html` i collegamenti all'icona siano puntati a `GestioneFerie.jpg`[cite: 2]:
+
+```html
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/jpeg" href="GestioneFerie.jpg">
+<link rel="apple-touch-icon" href="GestioneFerie.jpg">
+```[cite: 2]
+
+Salva l'immagine con il nome esatto **`GestioneFerie.jpg`** nella stessa cartella degli altri file e la tua PWA utilizzerà la nuova grafica come icona dell'app[cite: 2]!
